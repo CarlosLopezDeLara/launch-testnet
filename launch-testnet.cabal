@@ -1,0 +1,30 @@
+cabal-version:      3.0
+name:               launch-testnet
+version:            0.1.0.0
+-- synopsis:
+-- description:
+license:            Apache-2.0
+license-file:       LICENSE
+author:             Carlos LopezDeLara
+maintainer:         carlos.lopezdelara@iohk.io
+-- copyright:
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+executable launch-testnet
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  other-modules:       CLI
+  build-depends:
+      base                  >=4.9 && <5
+    , optparse-applicative  >=0.18
+    , process
+    , file-embed
+    , bytestring
+    , directory
+    , filepath
+  default-language:    Haskell2010
