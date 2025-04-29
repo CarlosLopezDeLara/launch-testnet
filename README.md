@@ -45,7 +45,7 @@ Launch a Conway‐era single‐pool testnet in Conway era, with `0.100 s` slots 
 ```shell
 $ cabal run launch-testnet -- default --out-dir <DIR>
 ```
-- Writes out under <DIR>/:
+- Writes out under DIR:
     specs/{shelley.json, alonzo.json, conway.json}
     configuration.json
     topology.json
@@ -79,11 +79,14 @@ $ cabal run launch-testnet -- default --out-dir <DIR>
 ```
 
 ### 2. dump-spec-files  
-Only write the default spec files, config & topology into <DIR>:
+Only write the default spec files, config & topology into DIR:
 
 ```shell
 $ cabal run launch-testnet -- dump-spec-files --out-dir <DIR>
 ```
+You can tweak these dump spec files to change the testnet parameters and then use the `custom` command 
+below to start the testnet with these custom spec files. 
+
 ### 3. custom  
 Provide your own genesis spec files plus node config & topology:
 ```shell
@@ -96,7 +99,7 @@ $ cabal run launch-testnet -- custom \
     --out-dir      <DIR>
 ```
 - Validates each input file exists.  
-- Copies them into <DIR>/specs/…, <DIR>/configuration.json and <DIR>/topology.json.  
-- Runs the same cardano-cli conway genesis create-testnet-data … --out-dir <DIR>  
-- Launches cardano-node run against your provided config + topology, logging to <DIR>/node.log.
+- Copies them into DIR/specs/…, DIR/configuration.json and DIR/topology.json.  
+- Runs the same cardano-cli conway genesis create-testnet-data … --out-dir DIR
+- Launches cardano-node run against your provided config + topology, logging to DIR/node.log.
 
