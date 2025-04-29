@@ -28,13 +28,13 @@ parser = hsubparser $
      commandGroup "Available commands"
   <> command "default"
        ( info defaultOpts
-         ( progDesc "Launch testnet with default embedded specs" ) )
+         ( progDesc "Launch testnet with default genesis files that replicate current Mainnet protocol parameters." ) )
   <> command "dump-spec-files"
        ( info dumpSpecsOpts
-         ( progDesc "Dump embedded specs + config/topology into DIR" ) )
+         ( progDesc "Dump default spec files that you can manipulate to start a testnet with launch-testnet custom" ) )
   <> command "custom"
        ( info customOpts
-         ( progDesc "Use your own genesis specs & node config + topology" ) )
+         ( progDesc "Use custom genesis specs & node config and topology" ) )
 
 defaultOpts :: Parser Command
 defaultOpts = Default
@@ -48,7 +48,7 @@ dumpSpecsOpts = DumpSpecs
   <$> strOption
       ( long "out-dir"
      <> metavar "DIR"
-     <> help "Directory in which to dump embedded specs + config/topology" )
+     <> help "Directory in which to dump the default spec files + config/topology" )
 
 customOpts :: Parser Command
 customOpts = Custom
