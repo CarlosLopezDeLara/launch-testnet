@@ -1,25 +1,31 @@
 # launch-testnet
 
-A minimal Haskell CLI that embeds default Cardano genesis specs and node config/topology files, generates testnet data with `cardano-cli`, and immediately launches a single‐pool local testnet.
+A minimal Haskell CLI tool to quickly set up a local Cardano testnet environment. It embeds default Cardano genesis specs and node configuration files, generates testnet data using `cardano-cli`, and launches a single-pool node with `cardano-node`. Ideal for developers needing a quick local Conway-era testnet.
 
 ## Prerequisites
 
-- GHC (8.10+) and Cabal (3.0+) installed  
-- `cardano-node-10.x` and `cardano-cli-10.x` binaries on your `PATH`
+* **GHC:** Version 8.10.7 or later
+* **Cabal:** Version 3.0 or later
+* **Cardano Binaries:** `cardano-node` and `cardano-cli` executables must be available on your system's `PATH`.
+    * *Note:* This tool requires features from the Conway era. Ensure your `cardano-node` and `cardano-cli` versions support the `cardano-cli conway genesis create-testnet-data` command (e.g., version 10.0.0 or later).
 
 ## Building
 
-- Fetch dependencies and compile:
-
-   ```bash
-   cabal update
-   cabal build
-
-   ```
+1.  **Update Cabal package list:**
+    ```bash
+    cabal update
+    ```
+2.  **Build the project:**
+    ```bash
+    cabal build launch-testnet
+    ```
+    This will create the executable within the `dist-newstyle` directory.
 
 ## Usage
 
-All commands assume `cardano-node` and `cardano-cli` are on your `PATH`.
+You can run the tool using `cabal run launch-testnet -- [...]` or by executing the compiled binary directly (e.g., `$(cabal list-bin launch-testnet) [...]`).
+
+All commands require `cardano-node` and `cardano-cli` to be accessible on your `PATH`.
 
 ```bash
 $ launch-testnet 
@@ -104,9 +110,15 @@ $ cabal run launch-testnet -- custom \
 - Runs the same cardano-cli conway genesis create-testnet-data … --out-dir DIR
 - Launches cardano-node run against your provided config + topology, logging to DIR/node.log.
 
-### Important
+### Configuration Details & Notes
 
-- The node is hardcoded to run in port `6000` 
-- tesntet-magic used is hardcoded to `42`
-- For simplicity, the default behavior is to have No Commitee and 3 DReps at testnet startup. This comes with 
-`"committeeMinSize": 0`  so that governance actions can be passed without having to vote with Committee keys.
+- Network Port: The cardano-node is hardcoded to run on port `6000`.
+- Testnet Magic: The network uses a fixed `--testnet-magic 42`.
+- `launch-testnet default` starts a local testnet with the following characteristics:
+   - A Conway-era network.
+   - Slot length: 0.1 seconds.
+   - Epoch length: 5 minutes (3000 slots).
+   - committeeMinSize: 0 (allows governance actions without active committee member votes).
+   - Other parameters generally align with Cardano Mainnet defaults at the time of embedding.
+   - DReps: The cardano-cli command generates keys for 3 DReps by default.
+   - No Committee: The default setup does not generate committee keys (--committee-keys is omitted in the cardano-cli call).
