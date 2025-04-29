@@ -1,4 +1,3 @@
--- app/CLI.hs
 {-# LANGUAGE OverloadedStrings #-}
 
 module CLI
@@ -76,4 +75,3 @@ customOpts = Custom
       ( long "out-dir"
      <> metavar "DIR"
      <> help "Directory to write testnet data + config files" )
-     

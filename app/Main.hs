@@ -1,4 +1,3 @@
--- app/Main.hs
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
@@ -16,7 +15,7 @@ import           System.FilePath             ((</>))
 import           System.Process              (callCommand, callProcess)
 import           System.IO                   (stderr, hPutStrLn)
 import           System.Exit                 (exitFailure)
-import GHC.Exception (divZeroException)
+
 
 specShelley, specAlonzo, specConway, specTopology, specConfig :: BS.ByteString
 specShelley  = $(embedFile "data/specs/shelley.json")
@@ -139,7 +138,7 @@ runCustom shelleySpec alonzoSpec conwaySpec configFile topologyFile dir = do
     , "--pools","1","--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
-        , "--drep-keys", "3" 
+    , "--drep-keys", "3" 
     , "--testnet-magic","42"
     , "--out-dir",          dir
     ]
