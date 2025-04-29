@@ -40,9 +40,14 @@ Available options:
   -h,--help                Show this help text
 
 Available commands
-  default                  Launch testnet with default embedded specs
-  dump-spec-files          Dump embedded specs + config/topology into DIR
-  custom                   Use your own genesis specs & node config + topology
+  default                  Launch a testnet instance using built-in genesis
+                           files that replicate current Mainnet settings.
+  dump-spec-files          Generate local copies of the default specification
+                           files (genesis, config, topology) for editing. Use
+                           these modified files with the 'custom' command.
+  custom                   Launch a testnet instance using custom genesis
+                           specifications, node configuration, and network
+                           topology provided via file paths.
 ```  
 
 ### 1. default  
