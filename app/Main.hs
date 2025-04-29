@@ -65,6 +65,7 @@ runDefault dir = do
     , "--pools","1","--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
+    , "--drep-keys", "3" 
     , "--testnet-magic","42"
     , "--out-dir",          dir
     ]
@@ -76,7 +77,7 @@ runDefault dir = do
       logFile  = poolDir </> "node.log"
       cmd = intercalate " "
         [ "cardano-node run"
-        , "--config",                         quoted (dir </> "configuration.json")
+        , "--config",                         quoted (dir </> "config.json")
         , "--topology",                       quoted (dir </> "topology.json")
         , "--database-path",                  quoted dbPath
         , "--socket-path",                    quoted sockPath
@@ -119,7 +120,7 @@ runCustom shelleySpec alonzoSpec conwaySpec configFile topologyFile dir = do
       destShelley  = specsDir </> "shelley.json"
       destAlonzo   = specsDir </> "alonzo.json"
       destConway   = specsDir </> "conway.json"
-      configDest   = dir </> "configuration.json"
+      configDest   = dir </> "config.json"
       topologyDest = dir </> "topology.json"
 
   createDirectoryIfMissing True specsDir
@@ -138,6 +139,7 @@ runCustom shelleySpec alonzoSpec conwaySpec configFile topologyFile dir = do
     , "--pools","1","--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
+        , "--drep-keys", "3" 
     , "--testnet-magic","42"
     , "--out-dir",          dir
     ]

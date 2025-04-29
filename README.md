@@ -40,14 +40,14 @@ Available commands
 ```  
 
 ### 1. default  
-Launch a Conway‐era single‐pool testnet in Conway era, with `0.100 s` slots and `5 min` epochs; all other protocol Parameters match current Mainnet protocol paramters. 
+Launch a Conway‐era single‐pool testnet in Conway era, with `0.100 s` slots and `5 min` epochs; all other Protocol Parameters, including the Constitution and Guardrails script match current Mainnet protocol paramters, excpept for `committeeMinSize` which is set to `0`. 
 
 ```shell
 $ cabal run launch-testnet -- default --out-dir <DIR>
 ```
 - Writes out under DIR:
     specs/{shelley.json, alonzo.json, conway.json}
-    configuration.json
+    config.json
     topology.json
 - Runs:
 ```
@@ -58,13 +58,14 @@ $ cabal run launch-testnet -- default --out-dir <DIR>
     --pools 1 --stake-delegators 3 \
     --total-supply 43000000000000 \
     --delegated-supply 9000000000000 \
+    --drep-keys 3 \
     --testnet-magic 42 \
     --out-dir <DIR>
 ```
 - Then launches:
 ```
   cardano-node run \
-    --config      <DIR>/configuration.json \
+    --config      <DIR>/config.json \
     --topology    <DIR>/topology.json \
     --database-path <DIR>/db \
     --socket-path   <DIR>/node.sock \
@@ -94,12 +95,18 @@ $ cabal run launch-testnet -- custom \
     --shelley-spec <PATH>/shelley.json \
     --alonzo-spec  <PATH>/alonzo.json \
     --conway-spec  <PATH>/conway.json \
-    --config       <PATH>/configuration.json \
+    --config       <PATH>/config.json \
     --topology     <PATH>/topology.json \
     --out-dir      <DIR>
 ```
 - Validates each input file exists.  
-- Copies them into DIR/specs/…, DIR/configuration.json and DIR/topology.json.  
+- Copies them into DIR/specs/…, DIR/config.json and DIR/topology.json.  
 - Runs the same cardano-cli conway genesis create-testnet-data … --out-dir DIR
 - Launches cardano-node run against your provided config + topology, logging to DIR/node.log.
 
+### Important
+
+- The node is hardcoded to run in port `6000` 
+- tesntet-magic used is hardcoded to `42`
+- For simplicity, the default behavior is to have No Commitee and 3 DReps at testnet startup. This comes with 
+`"committeeMinSize": 0`  so that governance actions can be passed without having to vote with Committee keys.

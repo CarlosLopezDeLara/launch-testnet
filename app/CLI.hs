@@ -14,7 +14,7 @@ data Command
   = Default   FilePath
   | DumpSpecs FilePath
   | Custom    FilePath  FilePath  FilePath  FilePath  FilePath  FilePath
-    -- ^ shelley.json, alonzo.json, conway.json, configuration.json, topology.json, out-dir
+    -- ^ shelley.json, alonzo.json, conway.json, config.json, topology.json, out-dir
   deriving Show
 
 optsParser :: ParserInfo Command
@@ -67,7 +67,7 @@ customOpts = Custom
   <*> strOption
       ( long "config"
      <> metavar "FILE"
-     <> help "Path to your custom configuration.json" )
+     <> help "Path to your custom config.json" )
   <*> strOption
       ( long "topology"
      <> metavar "FILE"
