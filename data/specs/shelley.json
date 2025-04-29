@@ -19,7 +19,7 @@
     "poolDeposit": 500000000,
     "minPoolCost": 170000000,
     "keyDeposit": 2000000,
-    "nOpt": 150,
+    "nOpt": 500,
     "rho": 0.003,
     "tau": 0.2,
     "a0": 0.3
