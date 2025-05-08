@@ -3,8 +3,9 @@
 
 module Main where
 
-import           CLI                         (Command(..), optsParser, PoolCount (PoolCount))
+import           CLI                         (Command(..), optsParser, PoolCount(PoolCount))
 import           Control.Monad               (forM_, unless)
+import           Control.Concurrent.Async    (forConcurrently_)
 import           Data.Semigroup              ((<>))
 import           Data.FileEmbed              (embedFile)
 import qualified Data.ByteString             as BS
@@ -12,11 +13,11 @@ import           Data.List                   (intercalate)
 import           Options.Applicative         (customExecParser, prefs, showHelpOnEmpty, showHelpOnError)
 import           System.Directory            (createDirectoryIfMissing, doesFileExist, copyFile)
 import           System.FilePath             ((</>))
-import           System.Process              (callCommand, callProcess)
-import           System.IO                   (stderr, hPutStrLn)
+import           System.Process              (callCommand, callProcess, createProcess, proc, CreateProcess(..), StdStream(..))
+import           System.IO                   (stderr, hPutStrLn, openFile, IOMode(AppendMode))
 import           System.Exit                 (exitFailure)
 
-
+-- | Embed the default spec/config/topology files
 specShelley, specAlonzo, specConway, specTopology, specConfig :: BS.ByteString
 specShelley  = $(embedFile "data/specs/shelley.json")
 specAlonzo   = $(embedFile "data/specs/alonzo.json")
@@ -29,12 +30,12 @@ main = do
   let parserPrefs = prefs (showHelpOnEmpty <> showHelpOnError)
   cmd <- customExecParser parserPrefs optsParser
   case cmd of
-    Default   dir nPools -> runDefault dir nPools
-    DumpSpecs dir -> runDumpSpecs dir >> putStrLn "DumpSpecs done."
-    Custom    shSpec alSpec cwSpec configFile topo dir -> runCustom shSpec alSpec cwSpec configFile topo dir
+    Default dir nPools       -> runDefault dir nPools
+    DumpSpecs dir            -> runDumpSpecs dir >> putStrLn "DumpSpecs done."
+    Custom sh al cw cfg topo dir ->
+                              runCustom sh al cw cfg topo dir
 
 -- | Dump default spec files and config/topology into a directory
---   This is useful for inspecting the specs and creating a custom testnet
 runDumpSpecs :: FilePath -> IO ()
 runDumpSpecs dir = do
   let specsDir     = dir </> "specs"
@@ -51,48 +52,80 @@ runDumpSpecs dir = do
 
   putStrLn $ "Specs, config & topology dumped to: " ++ dir
 
--- | Default journey. This will create a testnet with the default specs
+-- | Launch N cardano-node processes, each in its own pool directory
+spawnNodes
+  :: FilePath      -- ^ out-dir
+  -> FilePath      -- ^ config.json path
+  -> FilePath      -- ^ topology.json path
+  -> PoolCount
+  -> IO ()
+spawnNodes dir configPath topoPath (PoolCount n) =
+  forConcurrently_ [1 .. n] $ \i -> do
+    let poolDir  = dir </> "pools-keys" </> ("pool" <> show i)
+        dbPath   = dir </> "db"         </> ("pool" <> show i)
+        sockPath = dir </> ("node" <> show i <> ".sock")
+        logFile  = poolDir </> "node.log"
+        port     = 6000 + (i - 1)
+
+        args =
+          [ "run"
+          , "--config",                         configPath
+          , "--topology",                       topoPath
+          , "--database-path",                  dbPath
+          , "--socket-path",                    sockPath
+          , "--shelley-kes-key",                poolDir </> "kes.skey"
+          , "--shelley-vrf-key",                poolDir </> "vrf.skey"
+          , "--byron-delegation-certificate",   poolDir </> "byron-delegation.cert"
+          , "--byron-signing-key",              poolDir </> "byron-delegate.key"
+          , "--shelley-operational-certificate",poolDir </> "opcert.cert"
+          , "--host-addr",                      "0.0.0.0"
+          , "--port",                           show port
+          ]
+
+    h <- openFile logFile AppendMode
+    _ <- createProcess (proc "cardano-node" args)
+           { std_out = UseHandle h
+           , std_err = Inherit
+           }
+    putStrLn $ "✓ started pool " <> show i <> " on port " <> show port
+
+-- | Default journey. Creates a testnet with the embedded specs and custom number of pools
 runDefault :: FilePath -> PoolCount -> IO ()
 runDefault dir (PoolCount nPools) = do
-  runDumpSpecs dir -- write defult specs + config/topology to disc to be used by create-testnet-data 
+  runDumpSpecs dir
+
+  let relaysPath   = dir </> "pool-relays.json"
+      entries      =
+        [ "\"" <> show (i - 1) <> "\": [ \
+        \{ \"single host address\": { \
+        \\"IPv4\": \"127.0.0.1\", \
+        \\"IPv6\": null, \
+        \\"port\": " <> show (6000 + (i - 1)) <> " } } ]"
+        | i <- [1..nPools]
+        ]
+      relaysContent = "{\n" <> intercalate ",\n" entries <> "\n}\n"
+  writeFile relaysPath relaysContent
+  putStrLn $ "→ wrote relays config to: " <> relaysPath
 
   callProcess "cardano-cli"
     [ "conway","genesis","create-testnet-data"
     , "--spec-shelley",     dir </> "specs/shelley.json"
     , "--spec-alonzo",      dir </> "specs/alonzo.json"
     , "--spec-conway",      dir </> "specs/conway.json"
-    , "--pools", show nPools 
-    ,"--stake-delegators","3"
+    , "--pools",            show nPools
+    , "--relays",           relaysPath
+    , "--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
-    , "--drep-keys", "3" 
+    , "--drep-keys",       "3"
     , "--testnet-magic","42"
     , "--out-dir",          dir
     ]
 
-  let quoted p = '"' : p ++ "\""
-      dbPath   = dir </> "db"
-      sockPath = dir </> "node.sock"
-      poolDir  = dir </> "pools-keys/pool1"
-      logFile  = poolDir </> "node.log"
-      cmd = intercalate " "
-        [ "cardano-node run"
-        , "--config",                         quoted (dir </> "config.json")
-        , "--topology",                       quoted (dir </> "topology.json")
-        , "--database-path",                  quoted dbPath
-        , "--socket-path",                    quoted sockPath
-        , "--shelley-kes-key",                quoted (poolDir </> "kes.skey")
-        , "--shelley-vrf-key",                quoted (poolDir </> "vrf.skey")
-        , "--byron-delegation-certificate",   quoted (poolDir </> "byron-delegation.cert")
-        , "--byron-signing-key",              quoted (poolDir </> "byron-delegate.key")
-        , "--shelley-operational-certificate",quoted (poolDir </> "opcert.cert")
-        , "--host-addr",                     "0.0.0.0"
-        , "--port",                          "6000"
-        , "| tee -a",                         quoted logFile
-        ]
-  callCommand cmd
+  -- 3) Launch one cardano-node per pool, in the background
+  spawnNodes dir (dir </> "config.json") (dir </> "topology.json") (PoolCount nPools)
 
--- Use custom spec files
+-- | Launch a custom testnet with user-provided specs/config/topology
 runCustom
   :: FilePath   -- ^ shelleySpec
   -> FilePath   -- ^ alonzoSpec
@@ -139,7 +172,7 @@ runCustom shelleySpec alonzoSpec conwaySpec configFile topologyFile dir = do
     , "--pools","1","--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
-    , "--drep-keys", "3" 
+    , "--drep-keys", "3"
     , "--testnet-magic","42"
     , "--out-dir",          dir
     ]
@@ -148,7 +181,7 @@ runCustom shelleySpec alonzoSpec conwaySpec configFile topologyFile dir = do
       dbPath   = dir </> "db"
       sockPath = dir </> "node.sock"
       poolDir  = dir </> "pools-keys/pool1"
-      logFile  = dir </> "node.log"
+      logFile  = poolDir </> "node.log"
       cmd = intercalate " "
         [ "cardano-node run"
         , "--config",                         quoted configDest
