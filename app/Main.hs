@@ -3,7 +3,7 @@
 
 module Main where
 
-import           CLI                         (Command(..), optsParser)
+import           CLI                         (Command(..), optsParser, PoolCount (PoolCount))
 import           Control.Monad               (forM_, unless)
 import           Data.Semigroup              ((<>))
 import           Data.FileEmbed              (embedFile)
@@ -29,7 +29,7 @@ main = do
   let parserPrefs = prefs (showHelpOnEmpty <> showHelpOnError)
   cmd <- customExecParser parserPrefs optsParser
   case cmd of
-    Default   dir -> runDefault dir
+    Default   dir nPools -> runDefault dir nPools
     DumpSpecs dir -> runDumpSpecs dir >> putStrLn "DumpSpecs done."
     Custom    shSpec alSpec cwSpec configFile topo dir -> runCustom shSpec alSpec cwSpec configFile topo dir
 
@@ -52,8 +52,8 @@ runDumpSpecs dir = do
   putStrLn $ "Specs, config & topology dumped to: " ++ dir
 
 -- | Default journey. This will create a testnet with the default specs
-runDefault :: FilePath -> IO ()
-runDefault dir = do
+runDefault :: FilePath -> PoolCount -> IO ()
+runDefault dir (PoolCount nPools) = do
   runDumpSpecs dir -- write defult specs + config/topology to disc to be used by create-testnet-data 
 
   callProcess "cardano-cli"
@@ -61,7 +61,8 @@ runDefault dir = do
     , "--spec-shelley",     dir </> "specs/shelley.json"
     , "--spec-alonzo",      dir </> "specs/alonzo.json"
     , "--spec-conway",      dir </> "specs/conway.json"
-    , "--pools","1","--stake-delegators","3"
+    , "--pools", show nPools 
+    ,"--stake-delegators","3"
     , "--total-supply","43000000000000"
     , "--delegated-supply","9000000000000"
     , "--drep-keys", "3" 

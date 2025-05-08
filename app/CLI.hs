@@ -2,19 +2,22 @@
 
 module CLI
   ( Command(..)
+  , PoolCount(..) 
   , optsParser
   ) where
 
 import           Options.Applicative
 import           Data.Semigroup                ((<>))
 
--- | Available subcommands
+newtype PoolCount = PoolCount Int
+  deriving (Eq, Show)
 data Command
-  = Default   FilePath
+  = Default   FilePath PoolCount
   | DumpSpecs FilePath
   | Custom    FilePath  FilePath  FilePath  FilePath  FilePath  FilePath
     -- ^ shelley.json, alonzo.json, conway.json, config.json, topology.json, out-dir
   deriving Show
+
 
 optsParser :: ParserInfo Command
 optsParser = info (parser <**> helper) $
@@ -35,12 +38,22 @@ parser = hsubparser $
        ( info customOpts
          ( progDesc "Launch a testnet instance using custom genesis specifications, node configuration, and network topology provided via file paths." ) )
 
+poolsOpt :: Parser PoolCount
+poolsOpt =
+  option (PoolCount <$> auto)     -- auto :: ReadM Int  ➜  ReadM PoolCount
+    ( long "pools"
+   <> metavar "INT"
+   <> value (PoolCount 1)         -- default = 1
+   <> showDefault
+   <> help "Number of stake‑pools to create / run" )
+
 defaultOpts :: Parser Command
 defaultOpts = Default
   <$> strOption
       ( long "out-dir"
      <> metavar "DIR"
      <> help "Directory to write testnet data + config files" )
+  <*> poolsOpt
 
 dumpSpecsOpts :: Parser Command
 dumpSpecsOpts = DumpSpecs
