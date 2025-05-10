@@ -9,17 +9,19 @@ module CLI (
 
 import Data.Semigroup ((<>))
 import Options.Applicative
+
 -- import Options.Applicative.BashCompletion -- REMOVE THIS LINE or comment it out
 
 -- | Record to hold file paths for the custom command
 data CustomPaths = CustomPaths
     { cpShelleySpec :: FilePath
-    , cpAlonzoSpec  :: FilePath
-    , cpConwaySpec  :: FilePath
-    , cpConfigFile  :: FilePath
-    , cpTopology    :: FilePath
-    , cpOutDir      :: FilePath
-    } deriving (Show)
+    , cpAlonzoSpec :: FilePath
+    , cpConwaySpec :: FilePath
+    , cpConfigFile :: FilePath
+    , cpTopology :: FilePath
+    , cpOutDir :: FilePath
+    }
+    deriving (Show)
 
 newtype PoolCount = PoolCount Int
     deriving (Eq, Show)
@@ -36,8 +38,9 @@ optsParser =
         fullDesc
             <> header "launch-testnet - spin up or dump spec files for a local Cardano testnet"
             <> progDesc "Commands: default, dump-spec-files, custom. All commands require cardano-node and cardano-cli in PATH."
-  -- where
-    -- completionParser = bashCompletionParser parser (progDesc "Generate bash completion script for launch-testnet") -- REMOVE THIS SECTION
+
+-- where
+-- completionParser = bashCompletionParser parser (progDesc "Generate bash completion script for launch-testnet") -- REMOVE THIS SECTION
 
 parser :: Parser Command
 parser =
@@ -74,11 +77,12 @@ poolsOpt =
         )
 
 outDirOpt :: Parser FilePath
-outDirOpt = strOption
-    ( long "out-dir"
-        <> metavar "DIR"
-        <> help "Directory to write testnet data, logs, and config files."
-    )
+outDirOpt =
+    strOption
+        ( long "out-dir"
+            <> metavar "DIR"
+            <> help "Directory to write testnet data, logs, and config files."
+        )
 
 defaultOpts :: Parser Command
 defaultOpts =
@@ -92,33 +96,34 @@ dumpSpecsOpts =
         <$> outDirOpt
 
 customPathsParser :: Parser CustomPaths
-customPathsParser = CustomPaths
-    <$> strOption
-        ( long "shelley-spec"
-            <> metavar "FILE"
-            <> help "Path to your custom shelley.json"
-        )
-    <*> strOption
-        ( long "alonzo-spec"
-            <> metavar "FILE"
-            <> help "Path to your custom alonzo.json"
-        )
-    <*> strOption
-        ( long "conway-spec"
-            <> metavar "FILE"
-            <> help "Path to your custom conway.json"
-        )
-    <*> strOption
-        ( long "config"
-            <> metavar "FILE"
-            <> help "Path to your custom config.json node configuration file."
-        )
-    <*> strOption
-        ( long "topology"
-            <> metavar "FILE"
-            <> help "Path to your custom topology.json network topology file."
-        )
-    <*> outDirOpt
+customPathsParser =
+    CustomPaths
+        <$> strOption
+            ( long "shelley-spec"
+                <> metavar "FILE"
+                <> help "Path to your custom shelley.json"
+            )
+        <*> strOption
+            ( long "alonzo-spec"
+                <> metavar "FILE"
+                <> help "Path to your custom alonzo.json"
+            )
+        <*> strOption
+            ( long "conway-spec"
+                <> metavar "FILE"
+                <> help "Path to your custom conway.json"
+            )
+        <*> strOption
+            ( long "config"
+                <> metavar "FILE"
+                <> help "Path to your custom config.json node configuration file."
+            )
+        <*> strOption
+            ( long "topology"
+                <> metavar "FILE"
+                <> help "Path to your custom topology.json network topology file."
+            )
+        <*> outDirOpt
 
 customOpts :: Parser Command
 customOpts =

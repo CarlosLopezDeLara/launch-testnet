@@ -1,12 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
--- For CustomPaths and PoolCount
 {-# LANGUAGE RecordWildCards #-}
 
 module LaunchTestnet.Custom (
     runCustom,
 ) where
 
-import CLI (CustomPaths (..), PoolCount (..)) -- Import specific types
+import CLI (CustomPaths (..), PoolCount (..))
 import Control.Monad (forM_, unless)
 import LaunchTestnet.Commons
 import System.Directory (copyFile, createDirectoryIfMissing, doesFileExist)
@@ -14,13 +13,10 @@ import System.Exit (exitFailure)
 import System.FilePath ((</>))
 import System.IO (hPutStrLn, stderr)
 
--- Add other necessary imports
-
 runCustom :: CustomPaths -> PoolCount -> IO ()
 runCustom paths@CustomPaths{..} poolCount = do
-    -- paths and poolCount directly available
-    putStrLn $ "Running custom testnet setup in: " ++ cpOutDir
-    let (PoolCount nPools) = poolCount -- Extract nPools if needed for messages, etc.
+    putStrLn $ "Running custom testnet setup in: " ++ path cpOutDir
+    let (PoolCount nPools) = poolCount
     putStrLn $ "Number of pools to set up: " ++ show nPools
 
     forM_
@@ -30,10 +26,10 @@ runCustom paths@CustomPaths{..} poolCount = do
         , (cpConfigFile, "Config file")
         , (cpTopology, "Topology file")
         ]
-        $ \(path, label) -> do
-            exists <- doesFileExist path
+        $ \(fp, label) -> do
+            exists <- doesFileExist fp
             unless exists $ do
-                hPutStrLn stderr $ "Error: " ++ label ++ " not found at " ++ path
+                hPutStrLn stderr $ "Error: " ++ label ++ " not found at " ++ path fp
                 exitFailure
 
     let specsDir = cpOutDir </> "specs"
@@ -51,7 +47,7 @@ runCustom paths@CustomPaths{..} poolCount = do
     copyFile cpTopology destTopology
     putStrLn "Custom spec and config files copied to output directory."
 
-    let customBasePort = 6000 -- Could be a CLI arg for custom mode
+    let customBasePort = 6000
     mRelaysPathCustom <- generateRelayFile cpOutDir poolCount customBasePort
 
     let createArgs =
@@ -79,5 +75,5 @@ runCustom paths@CustomPaths{..} poolCount = do
                 , snaBasePort = customBasePort
                 }
     spawnNodes spawnArgs
-    putStrLn "Custom testnet setup finished. Nodes are starting in the background."
+    putStrLn $ successText "\nCustom testnet setup finished. Nodes are starting in the background."
     putStrLn "You may need to wait a few moments for nodes to fully initialize and create their socket files."
