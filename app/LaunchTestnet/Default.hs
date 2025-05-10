@@ -1,23 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
--- Optional, if you deconstruct PoolCount etc.
 {-# LANGUAGE RecordWildCards #-}
 
 module LaunchTestnet.Default (
     runDefault,
 ) where
 
-import CLI (PoolCount (..)) -- Import specific types needed
+import CLI (PoolCount (..))
 import LaunchTestnet.Commons
-import System.FilePath ((</>)) -- If used directly, though Commons handles most paths
--- Add other necessary imports (e.g., Data.List if you were using intercalate here)
 
 runDefault :: FilePath -> PoolCount -> IO ()
 runDefault outDir poolCount = do
-    -- poolCount is already PoolCount type
-    putStrLn $ "Running default testnet setup in: " ++ outDir
+    putStrLn $ "Running default testnet setup in: " ++ path outDir -- Use path helper
     (sSpec, aSpec, cSpec, cfgPath, topoPath) <- runDumpSpecs outDir
 
-    mRelaysPath <- generateRelayFile outDir poolCount 6000 -- Default base port
+    mRelaysPath <- generateRelayFile outDir poolCount 6000
+
     let createArgs =
             CreateTestnetDataArgs
                 { ctaSpecShelley = sSpec
@@ -40,8 +37,8 @@ runDefault outDir poolCount = do
                 , snaTopologyPath = topoPath
                 , snaOutDir = outDir
                 , snaPoolCount = poolCount
-                , snaBasePort = 6000 -- Default base port
+                , snaBasePort = 6000
                 }
     spawnNodes spawnArgs
-    putStrLn "Default testnet setup finished. Nodes are starting in the background."
+    putStrLn $ successText "\nDefault testnet setup finished. Nodes are starting in the background."
     putStrLn "You may need to wait a few moments for nodes to fully initialize and create their socket files."
