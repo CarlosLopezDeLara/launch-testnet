@@ -2,29 +2,34 @@
 
 module CLI (
     Command (..),
-    PoolCount (..),
+    PoolCount (..),  
     CustomPaths (..),
     optsParser,
 ) where
 
 import Data.Semigroup ((<>))
 import Options.Applicative
-
--- import Options.Applicative.BashCompletion -- REMOVE THIS LINE or comment it out
+import Control.Monad (when) 
 
 -- | Record to hold file paths for the custom command
 data CustomPaths = CustomPaths
     { cpShelleySpec :: FilePath
-    , cpAlonzoSpec :: FilePath
-    , cpConwaySpec :: FilePath
-    , cpConfigFile :: FilePath
-    , cpTopology :: FilePath
-    , cpOutDir :: FilePath
-    }
-    deriving (Show)
+    , cpAlonzoSpec  :: FilePath
+    , cpConwaySpec  :: FilePath
+    , cpConfigFile  :: FilePath
+    , cpTopology    :: FilePath
+    , cpOutDir      :: FilePath
+    } deriving (Show)
 
-newtype PoolCount = PoolCount Int
+newtype PoolCount = PoolCount Int 
     deriving (Eq, Show)
+
+-- Custom reader for PoolCount that ensures the value is >= 1
+poolCountReader :: ReadM PoolCount
+poolCountReader = do
+    n <- auto :: ReadM Int 
+    when (n < 1) $ readerError "Number of pools must be 1 or greater."
+    return (PoolCount n)
 
 data Command
     = Default FilePath PoolCount
@@ -34,13 +39,10 @@ data Command
 
 optsParser :: ParserInfo Command
 optsParser =
-    info (parser <**> helper) $ -- REVERTED: Removed <**> completionParser
+    info (parser <**> helper) $
         fullDesc
             <> header "launch-testnet - spin up or dump spec files for a local Cardano testnet"
             <> progDesc "Commands: default, dump-spec-files, custom. All commands require cardano-node and cardano-cli in PATH."
-
--- where
--- completionParser = bashCompletionParser parser (progDesc "Generate bash completion script for launch-testnet") -- REMOVE THIS SECTION
 
 parser :: Parser Command
 parser =
@@ -48,32 +50,22 @@ parser =
         commandGroup "Available commands"
             <> command
                 "default"
-                ( info
-                    defaultOpts
-                    (progDesc "Launch a testnet using built-in specs. Creates N pools as specified.")
-                )
+                (info defaultOpts (progDesc "Launch a testnet using built-in specs. Creates N pools as specified."))
             <> command
                 "dump-spec-files"
-                ( info
-                    dumpSpecsOpts
-                    (progDesc "Generate local copies of the default specification files for editing. Use these with the 'custom' command.")
-                )
+                (info dumpSpecsOpts (progDesc "Generate local copies of the default specification files for editing."))
             <> command
                 "custom"
-                ( info
-                    customOpts
-                    (progDesc "Launch a testnet using custom spec files, config, and topology. Creates N pools as specified.")
-                )
+                (info customOpts (progDesc "Launch a testnet using custom spec files, config, and topology. Creates N pools as specified."))
 
 poolsOpt :: Parser PoolCount
 poolsOpt =
-    option
-        (PoolCount <$> auto)
+    option poolCountReader 
         ( long "pools"
             <> metavar "INT"
             <> value (PoolCount 1)
             <> showDefault
-            <> help "Number of stake pools to create and run."
+            <> help "Number of stake pools to create and run (must be >= 1)." 
         )
 
 outDirOpt :: Parser FilePath
@@ -129,4 +121,4 @@ customOpts :: Parser Command
 customOpts =
     Custom
         <$> customPathsParser
-        <*> poolsOpt
+        <*> poolsOpt 
