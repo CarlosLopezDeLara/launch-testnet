@@ -25,15 +25,7 @@ A minimal Haskell CLI tool to quickly set up a local Cardano testnet environment
     cabal build launch-testnet
     ```
     This will create the executable within the `dist-newstyle` directory.
-1.  **Update Cabal package list:**
-    ```bash
-    cabal update
-    ```
-2.  **Build the project:**
-    ```bash
-    cabal build launch-testnet
-    ```
-    This will create the executable within the `dist-newstyle` directory.
+
 
 ## Usage
 
@@ -45,42 +37,33 @@ You can run the tool using `cabal run launch-testnet -- [...]` or by executing t
 All commands require `cardano-node` and `cardano-cli` to be accessible on your `PATH`.
 
 ```bash
-$ launch-testnet 
+launch-testnet 
 
 launch-testnet - spin up or dump spec files for a local Cardano testnet
 
 Usage: launch-testnet COMMAND
 
-  Commands: default, dump-spec-files, custom
+  Commands: default, dump-spec-files, custom. All commands require cardano-node
+  and cardano-cli in PATH.
 
 Available options:
   -h,--help                Show this help text
 
 Available commands
-  default                  Launch a testnet instance using built-in genesis
-                           files that replicate current Mainnet settings.
+  default                  Launch a testnet using built-in specs. Creates N
+                           pools as specified.
   dump-spec-files          Generate local copies of the default specification
-                           files (genesis, config, topology) for editing. Use
-                           these modified files with the 'custom' command.
-  custom                   Launch a testnet instance using custom genesis
-                           specifications, node configuration, and network
-                           topology provided via file paths.
-  default                  Launch a testnet instance using built-in genesis
-                           files that replicate current Mainnet settings.
-  dump-spec-files          Generate local copies of the default specification
-                           files (genesis, config, topology) for editing. Use
-                           these modified files with the 'custom' command.
-  custom                   Launch a testnet instance using custom genesis
-                           specifications, node configuration, and network
-                           topology provided via file paths.
+                           files for editing. Use these with the 'custom'
+                           command.
+  custom                   Launch a testnet using custom spec files, config, and
+                           topology. Creates N pools as specified.
 ```  
 
 ### 1. default  
-Launch a Conway‐era single‐pool testnet in Conway era, with `0.100 s` slots and `5 min` epochs; all other Protocol Parameters, including the Constitution and Guardrails script match current Mainnet protocol paramters, excpept for `committeeMinSize` which is set to `0`. 
-Launch a Conway‐era single‐pool testnet in Conway era, with `0.100 s` slots and `5 min` epochs; all other Protocol Parameters, including the Constitution and Guardrails script match current Mainnet protocol paramters, excpept for `committeeMinSize` which is set to `0`. 
+Launch a Conway‐era testnet with a single‐pool (default) or custom number of pools by using  `--pools N` flag. Default settings are with `0.300 s` slots and `10 min` epochs; all other Protocol Parameters, including the Constitution and Guardrails script match current Mainnet protocol paramters, excpept for `committeeMinSize` which is set to `0`. 
 
 ```shell
-$ cabal run launch-testnet -- default --out-dir <DIR> --pools <Nat>
+$ cabal run launch-testnet -- default --out-dir <DIR> --pools <N>
 ```
 
 ### 2. dump-spec-files  
@@ -102,23 +85,22 @@ $ cabal run launch-testnet -- custom \
     --conway-spec  <PATH>/conway.json \
     --config       <PATH>/config.json \
     --topology     <PATH>/topology.json \
-    --pools        <NAT>
+    --pools        <N>
     --out-dir      <DIR>
 ```
-- Validates each input file exists.  
+- Validates each input-file exists.  
 - Copies them into DIR/specs/…, DIR/config.json and DIR/topology.json.  
-- Runs the same cardano-cli conway genesis create-testnet-data … --out-dir DIR
 - Launches cardano-node run against your provided config + topology, logging to DIR/node.log.
 
 ### Configuration Details & Notes
 
 - Network Port: The cardano-node is hardcoded to run on port `6000`.
-- Testnet Magic: The network uses a fixed `--testnet-magic 42`.
+- Testnet Magic: The local cluster uses a fixed `--testnet-magic 42`.
 - `launch-testnet default` starts a local testnet with the following characteristics:
    - A Conway-era network.
-   - Slot length: 0.1 seconds.
-   - Epoch length: 5 minutes (3000 slots).
+   - Slot length: 0.3 seconds.
+   - Epoch length: 10 minutes (2000 slots).
    - committeeMinSize: 0 (allows governance actions without active committee member votes).
    - Other parameters generally align with Cardano Mainnet defaults at the time of embedding.
-   - DReps: The cardano-cli command generates keys for 3 DReps by default.
+   - DReps: The cardano-cli command generates keys for 3 DReps by default, they are registered, but have zero voting power delegated to them.
    - No Committee: The default setup does not generate committee keys (--committee-keys is omitted in the cardano-cli call).
