@@ -32,9 +32,9 @@ poolCountReader = do
     return (PoolCount n)
 
 data Command
-    = Default FilePath PoolCount
+    = Default FilePath PoolCount Word
     | DumpSpecs FilePath
-    | Custom CustomPaths PoolCount
+    | Custom CustomPaths PoolCount Word
     deriving (Show)
 
 optsParser :: ParserInfo Command
@@ -76,11 +76,22 @@ outDirOpt =
             <> help "Directory to write testnet data, logs, and config files."
         )
 
+testnetMagicOpt :: Parser Word
+testnetMagicOpt =
+    option auto
+        ( long "testnet-magic"
+            <> metavar "NATURAL"
+            <> value 42 
+            <> showDefault
+            <> help "The testnet magic number. Defult is 42 if not specified."
+        )
+
 defaultOpts :: Parser Command
 defaultOpts =
     Default
         <$> outDirOpt
         <*> poolsOpt
+        <*> testnetMagicOpt
 
 dumpSpecsOpts :: Parser Command
 dumpSpecsOpts =
@@ -121,4 +132,6 @@ customOpts :: Parser Command
 customOpts =
     Custom
         <$> customPathsParser
-        <*> poolsOpt 
+        <*> poolsOpt
+        <*> testnetMagicOpt
+

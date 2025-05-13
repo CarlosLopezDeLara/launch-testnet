@@ -13,8 +13,8 @@ import System.Exit (exitFailure)
 import System.FilePath ((</>))
 import System.IO (hPutStrLn, stderr)
 
-runCustom :: CustomPaths -> PoolCount -> IO ()
-runCustom paths@CustomPaths{..} poolCount = do
+runCustom :: CustomPaths -> PoolCount -> Word -> IO ()
+runCustom paths@CustomPaths{..} poolCount testnetMagicFromCli = do
     putStrLn $ "Running custom testnet setup in: " ++ path cpOutDir
     let (PoolCount nPools) = poolCount
     putStrLn $ "Number of pools to set up: " ++ show nPools
@@ -77,3 +77,5 @@ runCustom paths@CustomPaths{..} poolCount = do
     spawnNodes spawnArgs
     putStrLn $ successText "\nCustom testnet setup finished. Nodes are starting in the background."
     putStrLn "You may need to wait a few moments for nodes to fully initialize and create their socket files."
+    
+    printEnvInstructions cpOutDir poolCount testnetMagicFromCli 

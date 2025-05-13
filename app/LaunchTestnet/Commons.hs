@@ -7,7 +7,7 @@ module LaunchTestnet.Commons (
     -- Data Types
     CreateTestnetDataArgs(..),
     SpawnNodesArgs(..),
-    -- PoolCount and CustomPaths are imported from CLI by modules that need them directly
+
 
     -- Embedded Specs
     specShelley,
@@ -22,6 +22,7 @@ module LaunchTestnet.Commons (
     spawnNodes,
     generateRelayFile,
     runDumpSpecs,
+    printEnvInstructions,
 
     -- Color/Formatting Helpers
     path,
@@ -33,16 +34,15 @@ import qualified Data.ByteString as BS
 import Data.FileEmbed (embedFile)
 import Data.List (intercalate)
 import System.FilePath ((</>), takeFileName)
-import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.Directory (createDirectoryIfMissing, doesFileExist, makeAbsolute)
 import System.IO (Handle, IOMode(AppendMode), openFile, hClose, stderr, hPutStrLn)
 import System.Process (CreateProcess (..), StdStream (..), proc, createProcess, waitForProcess, ProcessHandle)
 import System.Exit (ExitCode (ExitSuccess), exitWith)
-import Control.Monad (unless, forM_, filterM, forM) -- Added forM
-import Control.Concurrent.Async (mapConcurrently) -- Changed from forConcurrently_
+import Control.Monad (unless, forM_, filterM, forM, when) 
+import Control.Concurrent.Async (mapConcurrently) 
 import Control.Concurrent (threadDelay)
 import Control.Exception (IOException, try)
 import System.Console.ANSI 
-
 import CLI (PoolCount(..)) 
 
 -- ANSI escape codes for colors
@@ -50,7 +50,7 @@ blue, cyan, green, reset :: String
 blue = setSGRCode [SetColor Foreground Vivid Blue]
 cyan = setSGRCode [SetColor Foreground Vivid Cyan]
 green = setSGRCode [SetColor Foreground Vivid Green]
-reset = setSGRCode [Reset] -- Resets all attributes
+reset = setSGRCode [Reset] 
 
 -- Helper to colorize paths
 path :: FilePath -> String
@@ -223,11 +223,11 @@ spawnNodes args@SpawnNodesArgs{..} = do
         let processSpec = (proc "cardano-node" nodeRunArgs) { std_err = Inherit, cwd = Just baseOutDir }
         putStrLn $ pIdOutput ++ " Intended CWD for node process: " ++ path baseOutDir
         
-        return (pIdOutput, fullLogFilePath, processSpec) -- Return data for concurrent launch
+        return (pIdOutput, fullLogFilePath, processSpec) 
 
     -- STEP 2: Concurrent loop for actual node launching
     putStrLn "\nAttempting to launch node processes concurrently..."
-    results <- mapConcurrently (\(pIdOutput, logPathFile, spec) -> do -- Renamed logPath to logPathFile
+    results <- mapConcurrently (\(pIdOutput, logPathFile, spec) -> do 
         eLogHandle <- try (openFile logPathFile AppendMode) :: IO (Either IOException Handle)
         case eLogHandle of
             Left ex -> do
@@ -248,13 +248,44 @@ spawnNodes args@SpawnNodesArgs{..} = do
                         putStrLn $ pIdOutput ++ " Node output directed to: " ++ path logPathFile
                         putStrLn $ pIdOutput ++ " Node errors (stderr) should appear on this console."
                         return $ Right ()
-        ) nodeLaunchConfigs -- Use the collected configs
+        ) nodeLaunchConfigs 
     
     let numPoolsToLaunch = length poolIndices
     let successfulLaunches = length [r | Right r <- results]
     if successfulLaunches == numPoolsToLaunch
         then putStrLn $ "\n" ++ successText ("✓ All " ++ show successfulLaunches ++ " node processes launched successfully.")
         else hPutStrLn stderr $ "\nWarning: Only " ++ show successfulLaunches ++ " out of " ++ show numPoolsToLaunch ++ " nodes were successfully launched. Check logs and errors above."
+
+printEnvInstructions :: FilePath -> PoolCount -> Word -> IO ()
+printEnvInstructions outDir (PoolCount numPools) testnetMagic = do
+    absOutDir <- makeAbsolute outDir
+    let title = "--- Testnet Environment Variables (Example) ---"
+        separator = replicate (length title) '-'
+
+    putStrLn "" 
+    putStrLn $ successText title
+    putStrLn "To interact with the testnet using cardano-cli, you might want to set:"
+
+    -- Since numPools is guaranteed to be >= 1 by poolCountReader:
+    let firstSocketRelPath = "node" <> show (1 :: Int) <> ".sock"
+    let firstSocketAbsPath = absOutDir </> firstSocketRelPath
+    putStrLn $ ""
+    putStrLn $ "  export CARDANO_NODE_SOCKET_PATH=" ++ path firstSocketAbsPath
+
+    when (numPools > 1) $ do
+        putStrLn "" 
+        putStrLn "# For other nodes, adjust the socket path (e.g., node2.sock, etc.):"
+        -- Optionally, loop and print for all (this part can remain as is):
+        forM_ [2 .. numPools] $ \i -> do
+             let otherSocketRelPath = "node" <> show i <> ".sock"
+             let otherSocketAbsPath = absOutDir </> otherSocketRelPath
+             putStrLn $ "# export CARDANO_NODE_SOCKET_PATH=" ++ path otherSocketAbsPath
+
+    putStrLn $ "  export CARDANO_NODE_NETWORK_ID=" ++ show testnetMagic
+    putStrLn ""
+    putStrLn $ "# (Alternatively, use the --testnet-magic " ++ show testnetMagic ++ reset ++ " flag with cardano-cli commands)"
+    putStrLn ""
+    putStrLn $ successText separator
 
 
 runDumpSpecs :: FilePath -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
