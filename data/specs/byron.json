@@ -6,7 +6,7 @@
   "maxProposalSize": "700",
   "mpcThd": "20000000000000",
   "scriptVersion": 0,
-  "slotDuration": "300",
+  "slotDuration": "2",
   "softforkRule": {
     "initThd": "900000000000000",
     "minThd": "600000000000000",
@@ -16,7 +16,7 @@
     "multiplier": "43946000000",
     "summand": "155381000000000"
   },
-  "unlockStakeEpoch": "18446744073709551615",
+  "unlockStakeEpoch": "0",
   "updateImplicit": "10000",
   "updateProposalThd": "100000000000000",
   "updateVoteThd": "1000000000000"

@@ -24,9 +24,9 @@ runDefault outDir poolCount testnetMagicFromCli = do
                 , ctaPoolCount = poolCount
                 , ctaRelaysFile = mRelaysPath
                 , ctaTestnetMagic = 42
-                , ctaTotalSupply = 43000000000000
-                , ctaDelegatedSupply = 9000000000000
-                , ctaDrepKeys = 3
+                , ctaTotalSupply = 45000000000000
+                , ctaDelegatedSupply = 15300000000000
+                , ctaDrepKeys = 0
                 , ctaStakeDelegators = 3
                 }
     createTestnetData createArgs
