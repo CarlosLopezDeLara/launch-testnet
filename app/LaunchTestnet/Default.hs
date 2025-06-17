@@ -5,11 +5,11 @@ module LaunchTestnet.Default (
     runDefault,
 ) where
 
-import CLI (PoolCount (..))
+import CLI (PoolCount (..), TestnetMagic(..))
 import LaunchTestnet.Commons
 
-runDefault :: FilePath -> PoolCount -> Word -> IO ()
-runDefault outDir poolCount testnetMagicFromCli = do
+runDefault :: FilePath -> PoolCount -> TestnetMagic -> IO ()
+runDefault outDir poolCount testnetMagicValue = do
     putStrLn $ "Running default testnet setup in: " ++ path outDir 
     (sSpec, aSpec, cSpec, cfgPath, topoPath) <- runDumpSpecs outDir
 
@@ -23,7 +23,7 @@ runDefault outDir poolCount testnetMagicFromCli = do
                 , ctaOutDir = outDir
                 , ctaPoolCount = poolCount
                 , ctaRelaysFile = mRelaysPath
-                , ctaTestnetMagic = 42
+                , ctaTestnetMagic = testnetMagicValue
                 , ctaTotalSupply = 45000000000000
                 , ctaDelegatedSupply = 15300000000000
                 , ctaDrepKeys = 0
@@ -43,4 +43,4 @@ runDefault outDir poolCount testnetMagicFromCli = do
     putStrLn $ successText "\nDefault testnet setup finished. Nodes are starting in the background."
     putStrLn "You may need to wait a few moments for nodes to fully initialize and create their socket files."
 
-    printEnvInstructions outDir poolCount testnetMagicFromCli 
+    printEnvInstructions outDir poolCount testnetMagicValue

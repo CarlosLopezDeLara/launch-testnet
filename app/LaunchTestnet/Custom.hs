@@ -5,7 +5,7 @@ module LaunchTestnet.Custom (
     runCustom,
 ) where
 
-import CLI (CustomPaths (..), PoolCount (..))
+import CLI (CustomPaths (..), PoolCount (..), TestnetMagic(..))
 import Control.Monad (forM_, unless)
 import LaunchTestnet.Commons
 import System.Directory (copyFile, createDirectoryIfMissing, doesFileExist)
@@ -13,8 +13,8 @@ import System.Exit (exitFailure)
 import System.FilePath ((</>))
 import System.IO (hPutStrLn, stderr)
 
-runCustom :: CustomPaths -> PoolCount -> Word -> IO ()
-runCustom paths@CustomPaths{..} poolCount testnetMagicFromCli = do
+runCustom :: CustomPaths -> PoolCount -> TestnetMagic -> IO ()
+runCustom paths@CustomPaths{..} poolCount testnetMagicValue = do
     putStrLn $ "Running custom testnet setup in: " ++ path cpOutDir
     let (PoolCount nPools) = poolCount
     putStrLn $ "Number of pools to set up: " ++ show nPools
@@ -58,7 +58,7 @@ runCustom paths@CustomPaths{..} poolCount testnetMagicFromCli = do
                 , ctaOutDir = cpOutDir
                 , ctaPoolCount = poolCount
                 , ctaRelaysFile = mRelaysPathCustom
-                , ctaTestnetMagic = 42
+                , ctaTestnetMagic = testnetMagicValue
                 , ctaTotalSupply = 43000000000000
                 , ctaDelegatedSupply = 9000000000000
                 , ctaDrepKeys = 3
@@ -78,4 +78,4 @@ runCustom paths@CustomPaths{..} poolCount testnetMagicFromCli = do
     putStrLn $ successText "\nCustom testnet setup finished. Nodes are starting in the background."
     putStrLn "You may need to wait a few moments for nodes to fully initialize and create their socket files."
     
-    printEnvInstructions cpOutDir poolCount testnetMagicFromCli 
+    printEnvInstructions cpOutDir poolCount testnetMagicValue 

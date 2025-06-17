@@ -2,7 +2,8 @@
 
 module CLI (
     Command (..),
-    PoolCount (..),  
+    PoolCount (..),
+    TestnetMagic (..),  
     CustomPaths (..),
     optsParser,
 ) where
@@ -10,6 +11,7 @@ module CLI (
 import Data.Semigroup ((<>))
 import Options.Applicative
 import Control.Monad (when) 
+import Numeric.Natural (Natural)
 
 -- | Record to hold file paths for the custom command
 data CustomPaths = CustomPaths
@@ -23,6 +25,8 @@ data CustomPaths = CustomPaths
 
 newtype PoolCount = PoolCount Int 
     deriving (Eq, Show)
+newtype TestnetMagic = TestnetMagic { unTestnetMagic :: Natural }
+    deriving (Eq, Show)
 
 -- Custom reader for PoolCount that ensures the value is >= 1
 poolCountReader :: ReadM PoolCount
@@ -32,9 +36,9 @@ poolCountReader = do
     return (PoolCount n)
 
 data Command
-    = Default FilePath PoolCount Word
+    = Default FilePath PoolCount TestnetMagic
     | DumpSpecs FilePath
-    | Custom CustomPaths PoolCount Word
+    | Custom CustomPaths PoolCount TestnetMagic
     deriving (Show)
 
 optsParser :: ParserInfo Command
@@ -76,14 +80,14 @@ outDirOpt =
             <> help "Directory to write testnet data, logs, and config files."
         )
 
-testnetMagicOpt :: Parser Word
+testnetMagicOpt :: Parser TestnetMagic
 testnetMagicOpt =
-    option auto
+    fmap TestnetMagic $ option auto
         ( long "testnet-magic"
             <> metavar "NATURAL"
-            <> value 42 
+            <> value 42 -- Default value if not specified
             <> showDefault
-            <> help "The testnet magic number. Defult is 42 if not specified."
+            <> help "The testnet magic number."
         )
 
 defaultOpts :: Parser Command

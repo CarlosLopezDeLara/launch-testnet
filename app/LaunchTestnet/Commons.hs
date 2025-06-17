@@ -43,7 +43,8 @@ import Control.Concurrent.Async (mapConcurrently)
 import Control.Concurrent (threadDelay)
 import Control.Exception (IOException, try)
 import System.Console.ANSI 
-import CLI (PoolCount(..)) 
+import CLI (PoolCount(..), TestnetMagic(..)) 
+import Numeric.Natural (Natural)
 
 -- ANSI escape codes for colors
 blue, cyan, green, reset :: String
@@ -81,7 +82,7 @@ data CreateTestnetDataArgs = CreateTestnetDataArgs
     , ctaOutDir         :: FilePath
     , ctaPoolCount      :: PoolCount
     , ctaRelaysFile     :: Maybe FilePath
-    , ctaTestnetMagic   :: Word
+    , ctaTestnetMagic   :: TestnetMagic
     , ctaTotalSupply    :: Word
     , ctaDelegatedSupply:: Word
     , ctaDrepKeys       :: Int
@@ -120,7 +121,7 @@ createTestnetData args@CreateTestnetDataArgs{..} = do
             , "--total-supply", show ctaTotalSupply
             , "--delegated-supply", show ctaDelegatedSupply
             , "--drep-keys", show ctaDrepKeys
-            , "--testnet-magic", show ctaTestnetMagic
+            , "--testnet-magic", show (unTestnetMagic ctaTestnetMagic)
             , "--out-dir", ctaOutDir
             ]
         relayArgsList = case ctaRelaysFile of
@@ -257,11 +258,13 @@ spawnNodes args@SpawnNodesArgs{..} = do
         then putStrLn $ "\n" ++ successText ("✓ All " ++ show successfulLaunches ++ " node processes launched successfully.")
         else hPutStrLn stderr $ "\nWarning: Only " ++ show successfulLaunches ++ " out of " ++ show numPoolsToLaunch ++ " nodes were successfully launched. Check logs and errors above."
 
-printEnvInstructions :: FilePath -> PoolCount -> Word -> IO ()
+printEnvInstructions :: FilePath -> PoolCount -> TestnetMagic -> IO ()
 printEnvInstructions outDir (PoolCount numPools) testnetMagic = do
     absOutDir <- makeAbsolute outDir
     let title = "--- Testnet Environment Variables (Example) ---"
         separator = replicate (length title) '-'
+
+    let magic = unTestnetMagic testnetMagic
 
     putStrLn "" 
     putStrLn $ successText title
@@ -282,9 +285,9 @@ printEnvInstructions outDir (PoolCount numPools) testnetMagic = do
              let otherSocketAbsPath = absOutDir </> otherSocketRelPath
              putStrLn $ "# export CARDANO_NODE_SOCKET_PATH=" ++ path otherSocketAbsPath
 
-    putStrLn $ "  export CARDANO_NODE_NETWORK_ID=" ++ show testnetMagic
+    putStrLn $ "  export CARDANO_NODE_NETWORK_ID=" ++ show magic
     putStrLn ""
-    putStrLn $ "# (Alternatively, use the --testnet-magic " ++ show testnetMagic ++ reset ++ " flag with cardano-cli commands)"
+    putStrLn $ "# (Alternatively, use the --testnet-magic " ++ show magic ++ reset ++ " flag with cardano-cli commands)"
     putStrLn ""
     putStrLn $ successText separator
 
