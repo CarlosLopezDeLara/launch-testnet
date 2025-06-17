@@ -95,37 +95,37 @@
       "severity": "Warning"
     },
     "Net.ConnectionManager.Remote": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.Subscription.DNS": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Startup.DiffusionInit": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.ErrorPolicy": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Forge.Loop": {
-      "severity": "Info"
+      "severity": "Notice"
     },
     "Forge.StateInfo": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.InboundGovernor.Remote": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.Subscription.IP": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.ErrorPolicy.Local": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Mempool": {
       "severity": "Info"
     },
     "Net.Mux.Remote": {
-      "severity": "Info"
+      "severity": "Warning"
     },
     "Net.InboundGovernor": {
       "severity": "Warning"
