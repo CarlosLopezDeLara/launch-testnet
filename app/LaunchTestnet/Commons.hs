@@ -220,7 +220,7 @@ spawnNodes args@SpawnNodesArgs{..} = do
                 ]
         
         putStrLn $ pIdOutput ++ " Constructing command: cardano-node " ++ unwords nodeRunArgs
-        let processSpec = (proc "cardano-node" nodeRunArgs) { std_err = Inherit, cwd = Just baseOutDir }
+        let processSpec = (proc "cardano-node" nodeRunArgs) { cwd = Just baseOutDir }
         putStrLn $ pIdOutput ++ " Intended CWD for node process: " ++ path baseOutDir
         
         return (pIdOutput, fullLogFilePath, processSpec) 
@@ -235,7 +235,9 @@ spawnNodes args@SpawnNodesArgs{..} = do
                 return $ Left $ "Log file open error for " ++ pIdOutput
             Right logHandle -> do
                 putStrLn $ pIdOutput ++ " Log file " ++ path logPathFile ++ " opened successfully."
-                let finalProcessSpec = spec { std_out = UseHandle logHandle }
+                let finalProcessSpec = spec { std_out = UseHandle logHandle
+                                            , std_err = UseHandle logHandle 
+                                            }
                 
                 eProcess <- try (createProcess finalProcessSpec) :: IO (Either IOException (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle))
                 case eProcess of
@@ -246,7 +248,6 @@ spawnNodes args@SpawnNodesArgs{..} = do
                     Right (_, _, _, _) -> do
                         putStrLn $ pIdOutput ++ successText " ✓ Successfully created cardano-node process."
                         putStrLn $ pIdOutput ++ " Node output directed to: " ++ path logPathFile
-                        putStrLn $ pIdOutput ++ " Node errors (stderr) should appear on this console."
                         return $ Right ()
         ) nodeLaunchConfigs 
     
