@@ -291,17 +291,24 @@ printEnvInstructions outDir (PoolCount numPools) testnetMagic = do
     putStrLn ""
     putStrLn $ successText separator
 
-
 runDumpSpecs :: FilePath -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
 runDumpSpecs dir = do
-    let specsDir = dir </> "specs"
-        shelleyPath = specsDir </> "shelley.json"
-        alonzoPath = specsDir </> "alonzo.json"
-        conwayPath = specsDir </> "conway.json"
+    let shelleyPath = dir </> "shelley.json"
+        alonzoPath = dir </> "alonzo.json"
+        conwayPath = dir </> "conway.json"
         configPath = dir </> "config.json"
         topologyPath = dir </> "topology.json"
 
-    createDirectoryIfMissing True specsDir
+-- runDumpSpecs :: FilePath -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
+-- runDumpSpecs dir = do
+--     let specsDir = dir </> "specs"
+--         shelleyPath = specsDir </> "shelley.json"
+--         alonzoPath = specsDir </> "alonzo.json"
+--         conwayPath = specsDir </> "conway.json"
+--         configPath = dir </> "config.json"
+--         topologyPath = dir </> "topology.json"
+
+    createDirectoryIfMissing True dir
     BS.writeFile shelleyPath specShelley
     BS.writeFile alonzoPath specAlonzo
     BS.writeFile conwayPath specConway
